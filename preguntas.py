@@ -112,12 +112,12 @@ def pregunta_04():
     # inferior de 5 palabras. Solo deben analizarse palabras conformadas por
     # letras.
     countVectorizer = CountVectorizer(
-        analyzer="word",
+        analyzer= analyzer,
         lowercase=True,
         stop_words="english",
         token_pattern=r"(?u)\b\w\w+\b",
         binary=True,
-        max_df=1,
+        max_df=1.0,
         min_df=5,
     )
 
@@ -125,7 +125,7 @@ def pregunta_04():
     pipeline =Pipeline(
         steps=[
             ("vect", countVectorizer),
-            ("naive-bayes", BernoulliNB()),
+            ("classifier", BernoulliNB()),
         ],
     )
 
@@ -133,15 +133,15 @@ def pregunta_04():
     # considerar 10 valores entre 0.1 y 1.0 para el parámetro alpha de
     # BernoulliNB.
     param_grid = {
-        "modelo__alpha": np.logspace(-1, 1, 3),
+        "classifier__alpha": np.arange(0.1, 1.1, 0.1),
     }
 
     # Defina una instancia de GridSearchCV con el pipeline y el diccionario de
     # parámetros. Use cv = 5, y "accuracy" como métrica de evaluación
     gridSearchCV = GridSearchCV(
         estimator= pipeline,
-        param_grid=param_grid,
-        cv=5,
+        param_grid= param_grid,
+        cv= 5,
         scoring="accuracy",
         refit=True,
         return_train_score=True,
@@ -149,10 +149,7 @@ def pregunta_04():
 
     # Búsque la mejor combinación de regresores
     gridSearchCV.fit(x_train, y_train)
-
-    # Retorne el mejor modelo
     return gridSearchCV
-
 
 def pregunta_05():
     """
@@ -161,23 +158,24 @@ def pregunta_05():
     """
 
     # Importe confusion_matrix
-    from ____ import ____
+    # Importe confusion_matrix
+    from sklearn.metrics import confusion_matrix
 
     # Obtenga el pipeline de la pregunta 3.
     gridSearchCV = pregunta_04()
 
     # Cargue las variables.
-    X_train, X_test, y_train, y_test = pregunta_02()
+    x_train, x_test, y_train, y_test = pregunta_02()
 
     # Evalúe el pipeline con los datos de entrenamiento usando la matriz de confusion.
-    cfm_train = ____(
-        y_true=____,
-        y_pred=____.____(____),
+    cfm_train = confusion_matrix(
+        y_true=y_train,
+        y_pred=gridSearchCV.predict(x_train),
     )
 
-    cfm_test = ____(
-        y_true=____,
-        y_pred=____.____(____),
+    cfm_test = confusion_matrix(
+        y_true=y_test,
+        y_pred=gridSearchCV.predict(x_test),
     )
 
     # Retorne la matriz de confusion de entrenamiento y prueba
@@ -194,11 +192,11 @@ def pregunta_06():
     gridSearchCV = pregunta_04()
 
     # Cargue los datos generados en la pregunta 01.
-    _, _, X_untagged, _ = pregunta_01()
+    x_tagged, y_tagged, x_untagged, y_untagged = pregunta_01()
 
     # pronostique la polaridad del sentimiento para los datos
     # no etiquetados
-    y_untagged_pred = ____.____(____)
+    y_untagged_pred = gridSearchCV.predict(x_untagged)
 
     # Retorne el vector de predicciones
     return y_untagged_pred
